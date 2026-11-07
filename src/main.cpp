@@ -1,4 +1,4 @@
-#include <feature_tracker/feature_tracker.hpp>
+#include <feature_tracker.hpp>
 
 #include <memory>
 
@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
     executor.add_node(node->receiver());
+    executor.add_node(node->performanceMonitor());
     executor.spin();
 
     rclcpp::shutdown();
