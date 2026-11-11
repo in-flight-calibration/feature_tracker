@@ -28,6 +28,7 @@ struct Match
 
 struct Features
 {
+    std::array<int64_t, 2> timestamp{0, 0};
     std::vector<Match> matches;
     cv::Matx33d fundamental = cv::Matx33d::all(std::numeric_limits<double>::quiet_NaN());
 };

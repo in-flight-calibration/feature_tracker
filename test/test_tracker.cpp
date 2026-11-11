@@ -56,9 +56,9 @@ int main()
     feature_tracker::TrackerOrb tracker(viewer);
     const rclcpp::Time stamp(0, 0, RCL_SYSTEM_TIME);
 
-    ok &= check(!tracker.track(stamp, bgr(base(cv::Rect(0, 0, 640, 480)).clone())).has_value(), "first frame yields no matches");
+    ok &= check(!tracker.process(stamp, bgr(base(cv::Rect(0, 0, 640, 480)).clone())).has_value(), "first frame yields no matches");
 
-    const auto result = tracker.track(stamp, bgr(base(cv::Rect(12, 8, 640, 480)).clone()));
+    const auto result = tracker.process(stamp, bgr(base(cv::Rect(12, 8, 640, 480)).clone()));
     ok &= check(result.has_value(), "second frame yields a result");
 
     if (result)
@@ -80,7 +80,7 @@ int main()
 
         ok &= check(consistent >= 50, "inliers follow the known shift");
 
-        const auto next = tracker.track(stamp, bgr(base(cv::Rect(24, 16, 640, 480)).clone()));
+        const auto next = tracker.process(stamp, bgr(base(cv::Rect(24, 16, 640, 480)).clone()));
         bool persistent = false;
 
         if (next)

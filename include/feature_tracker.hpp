@@ -1,5 +1,6 @@
 #pragma once
 
+#include <affine.hpp>
 #include <ifc_tools/horizon_utils.hpp>
 #include <tracker/tracker.hpp>
 #include <tracker/tracker_factory.hpp>
@@ -14,10 +15,12 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace feature_tracker
 {
@@ -58,6 +61,9 @@ public:
         }
 
         _margin_px = static_cast<float>(declare_parameter<double>("tracker.horizon_margin_px", 10.0));
+        _affine.min_matches = declare_parameter<int>("tracker.affine.min_matches", 12);
+        _affine.ransac_threshold = declare_parameter<double>("tracker.affine.ransac_threshold", 0.005);
+        _affine.min_spread = declare_parameter<double>("tracker.affine.min_spread", 0.01);
     }
 
     const std::shared_ptr<ifc_tools::ImageReceiver>& receiver() const
@@ -79,18 +85,18 @@ private:
     rclcpp::Subscription<ifc_msgs::msg::Horizon>::SharedPtr _horizon_subscription;
 
     float _margin_px;
+    AffineConfig _affine;
 
     std::mutex _mutex;
     cv::Mat _image;
     std::optional<ifc_msgs::msg::Horizon> _horizon;
     std::optional<rclcpp::Time> _image_timestamp;
-    std::optional<rclcpp::Time> _previous_timestamp;
     
     std::shared_ptr<ifc_tools::PerformanceMonitor> _performance_monitor;
 
     void onImage(const rclcpp::Time& image_timestamp, const cv::Mat& image)
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::scoped_lock<std::mutex> lock(_mutex);
 
         if (_image_timestamp)
         {
@@ -103,7 +109,7 @@ private:
 
     void onHorizon(const ifc_msgs::msg::Horizon::ConstSharedPtr& message)
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::scoped_lock<std::mutex> lock(_mutex);
 
         _horizon = *message;
 
@@ -131,19 +137,16 @@ private:
         _image_timestamp.reset();
 
         _performance_monitor->start();
-        const auto features = _tracker->track(timestamp, maskedImage());
+        const auto features = _tracker->process(timestamp, maskedImage());
         _performance_monitor->stop();
 
-        const auto previous_timestamp = _previous_timestamp;
-        _previous_timestamp = timestamp;
-
-        if (features && previous_timestamp)
+        if (features)
         {
-            publish(*features, *previous_timestamp, timestamp);
+            publish(*features);
         }
     }
 
-    void publish(const Features& features, const rclcpp::Time& previous_timestamp, const rclcpp::Time& image_timestamp) const
+    void publish(const Features& features) const
     {
         const cv::Point2f centre(0.5f * _image.cols, 0.5f * _image.rows);
         const cv::Matx33d A(centre.x, 0.0, centre.x, 0.0, centre.y, centre.y, 0.0, 0.0, 1.0);
@@ -151,13 +154,18 @@ private:
 
         ifc_msgs::msg::Features message;
         message.header.stamp = static_cast<builtin_interfaces::msg::Time>(get_clock()->now());
-        message.image_timestamp[0] = static_cast<builtin_interfaces::msg::Time>(previous_timestamp);
-        message.image_timestamp[1] = static_cast<builtin_interfaces::msg::Time>(image_timestamp);
+        message.image_timestamp[0] = static_cast<builtin_interfaces::msg::Time>(rclcpp::Time(features.timestamp[0]));
+        message.image_timestamp[1] = static_cast<builtin_interfaces::msg::Time>(rclcpp::Time(features.timestamp[1]));
 
         for (int i = 0; i < 9; ++i)
         {
             message.f[i] = static_cast<float>(fundamental.val[i]);
         }
+
+        std::vector<cv::Point2f> p1;
+        std::vector<cv::Point2f> p2;
+        const bool has_fundamental = std::isfinite(features.fundamental(0, 0));
+        message.affine.fill(std::numeric_limits<float>::quiet_NaN());
 
         for (const Match& match : features.matches)
         {
@@ -170,6 +178,20 @@ private:
             entry.quality = match.quality;
             entry.inlier = match.inlier;
             message.matches.push_back(entry);
+
+            if (!has_fundamental || match.inlier)
+            {
+                p1.emplace_back(entry.x1, entry.y1);
+                p2.emplace_back(entry.x2, entry.y2);
+            }
+        }
+
+        if (const auto affine = estimateAffine(p1, p2, _affine))
+        {
+            for (int i = 0; i < 6; ++i)
+            {
+                message.affine[i] = static_cast<float>(affine->val[i]);
+            }
         }
 
         _publisher->publish(message);

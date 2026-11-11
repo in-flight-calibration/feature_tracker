@@ -29,7 +29,8 @@ public:
     {
     }
 
-    std::optional<Features> track(const rclcpp::Time& image_timestamp, const cv::Mat& image) override
+protected:
+    std::optional<Features> _process(const rclcpp::Time&, const cv::Mat& image) override
     {
         std::vector<cv::KeyPoint> keypoints;
         cv::Mat descriptors;
@@ -62,11 +63,6 @@ public:
             {
                 features.matches[i].inlier = inliers[i] != 0;
             }
-        }
-
-        if (_viewer)
-        {
-            draw(image, matches, inliers, fundamental.has_value(), image_timestamp);
         }
 
         save(keypoints, descriptors, ids);
@@ -168,22 +164,6 @@ private:
         _keypoints = std::move(keypoints);
         _descriptors = std::move(descriptors);
         _ids = std::move(ids);
-    }
-
-    void draw(
-        const cv::Mat& image, const std::vector<Match>& matches,
-        const std::vector<uchar>& inliers, bool valid, const rclcpp::Time& image_timestamp)
-    {
-        cv::Mat annotated = image.clone();
-
-        for (size_t i = 0; i < matches.size(); ++i)
-        {
-            cv::circle(annotated, matches[i].current, 3,
-                !valid || inliers[i] ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255), cv::FILLED);
-        }
-
-        _viewer->update(0, 0, annotated, "FEATURES");
-        _viewer->render(static_cast<uint64_t>(image_timestamp.nanoseconds() / 1000));
     }
 };
 
