@@ -37,33 +37,33 @@ public:
         _receiver = std::make_shared<ifc_tools::ImageReceiver>("feature_tracker_receiver", image_topic, image_transport);
         _receiver->setCallback(std::bind(&FeatureTracker::onImage, this, std::placeholders::_1, std::placeholders::_2));
 
-        const std::string horizon_topic = declare_parameter<std::string>("horizon.topic", "/horizon_detection/horizon");
+        const std::string horizon_topic = declare_parameter<std::string>("horizon_detection.topic", "/horizon_detection/horizon");
         _horizon_subscription = create_subscription<ifc_msgs::msg::Horizon>(
             horizon_topic, rclcpp::ServicesQoS(),
             std::bind(&FeatureTracker::onHorizon, this, std::placeholders::_1));
 
-        const std::string tracker_name = declare_parameter<std::string>("tracker.type", "orb");
-        if (declare_parameter<bool>("tracker.debug_view", false))
+        const std::string tracker_name = declare_parameter<std::string>("feature_tracker.type", "orb");
+        if (declare_parameter<bool>("feature_tracker.debug_view", false))
         {
             _viewer.emplace(cv::Size(960, 540), 1, 1);
         }
 
         _tracker = TrackerFactory::create(tracker_name, _viewer);
 
-        const std::string features_topic = declare_parameter<std::string>("tracker.topic", "/feature_tracker/features");
+        const std::string features_topic = declare_parameter<std::string>("feature_tracker.topic", "/feature_tracker/features");
         _publisher = create_publisher<ifc_msgs::msg::Features>(features_topic, rclcpp::ServicesQoS());
 
-        const std::string performance_topic = declare_parameter<std::string>("tracker.performance_topic", "/performance/feature_tracker");
+        const std::string performance_topic = declare_parameter<std::string>("feature_tracker.performance_topic", "/feature_tracker/performance");
 
         if (!performance_topic.empty())
         {
             _performance_monitor->setTopic(performance_topic);
         }
 
-        _margin_px = static_cast<float>(declare_parameter<double>("tracker.horizon_margin_px", 10.0));
-        _affine.min_matches = declare_parameter<int>("tracker.affine.min_matches", 12);
-        _affine.ransac_threshold = declare_parameter<double>("tracker.affine.ransac_threshold", 0.005);
-        _affine.min_spread = declare_parameter<double>("tracker.affine.min_spread", 0.01);
+        _margin_px = static_cast<float>(declare_parameter<double>("feature_tracker.horizon_margin_px", 10.0));
+        _affine.min_matches = declare_parameter<int>("feature_tracker.affine.min_matches", 12);
+        _affine.ransac_threshold = declare_parameter<double>("feature_tracker.affine.ransac_threshold", 0.005);
+        _affine.min_spread = declare_parameter<double>("feature_tracker.affine.min_spread", 0.01);
     }
 
     const std::shared_ptr<ifc_tools::ImageReceiver>& receiver() const

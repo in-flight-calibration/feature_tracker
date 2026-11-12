@@ -23,9 +23,9 @@ public:
         : Tracker("feature_tracker_orb", viewer, options),
           _orb(cv::ORB::create(static_cast<int>(MAX_FEATURES))),
           _matcher(cv::NORM_HAMMING),
-          _ratio_test(declare_parameter<double>("tracker.orb.ratio_test", 0.8)),
-          _ransac_threshold(declare_parameter<double>("tracker.orb.ransac_threshold_px", 1.0)),
-          _ransac_confidence(declare_parameter<double>("tracker.orb.ransac_confidence", 0.999))
+          _ratio_test(declare_parameter<double>("feature_tracker.orb.ratio_test", 0.8)),
+          _ransac_threshold(declare_parameter<double>("feature_tracker.orb.ransac_threshold_px", 1.0)),
+          _ransac_confidence(declare_parameter<double>("feature_tracker.orb.ransac_confidence", 0.999))
     {
     }
 
