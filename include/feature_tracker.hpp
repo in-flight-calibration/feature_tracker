@@ -1,15 +1,15 @@
 #pragma once
 
 #include <affine.hpp>
-#include <ifc_tools/horizon_utils.hpp>
+#include <ifc_tools/msg/horizon.hpp>
 #include <tracker/tracker.hpp>
 #include <tracker/tracker_factory.hpp>
 #include <ifc_msgs/msg/features.hpp>
 #include <ifc_msgs/msg/horizon.hpp>
 #include <ifc_msgs/msg/match.hpp>
-#include <ifc_tools/debug_viewer.hpp>
-#include <ifc_tools/image_receiver.hpp>
-#include <ifc_tools/performance_monitor.hpp>
+#include <ifc_tools/common/debug_viewer.hpp>
+#include <ifc_tools/common/performance_monitor.hpp>
+#include <ifc_tools/receiver/image_receiver.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <cmath>
@@ -127,7 +127,7 @@ private:
         }
 
         cv::Mat masked;
-        _image.copyTo(masked, ifc_tools::groundMask(_image.size(), _horizon->theta, _horizon->rho, _margin_px));
+        _image.copyTo(masked, ifc_tools::HorizonUtils::groundMask(_image.size(), _horizon->theta, _horizon->rho, _margin_px));
         return masked;
     }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <features.hpp>
-#include <ifc_tools/debug_viewer.hpp>
+#include <ifc_tools/common/debug_viewer.hpp>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>

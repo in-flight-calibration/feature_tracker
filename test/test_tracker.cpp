@@ -1,4 +1,4 @@
-#include <ifc_tools/horizon_utils.hpp>
+#include <ifc_tools/msg/horizon.hpp>
 #include <tracker/orb/tracker_orb.hpp>
 
 #include <opencv2/imgproc.hpp>
@@ -43,11 +43,11 @@ int main()
     const cv::Size size(640, 480);
     bool ok = true;
 
-    const cv::Mat mask = ifc_tools::groundMask(size, 0.0f, 0.0f, 0.0f);
+    const cv::Mat mask = ifc_tools::HorizonUtils::groundMask(size, 0.0f, 0.0f, 0.0f);
     ok &= check(mask.at<uchar>(10, 100) == 0, "sky pixel is masked out");
     ok &= check(mask.at<uchar>(470, 100) == 255, "ground pixel is kept");
 
-    const cv::Mat tilted = ifc_tools::groundMask(size, 0.3f, 0.0f, 0.0f);
+    const cv::Mat tilted = ifc_tools::HorizonUtils::groundMask(size, 0.3f, 0.0f, 0.0f);
     ok &= check(tilted.at<uchar>(470, 320) == 255 && tilted.at<uchar>(10, 320) == 0, "tilted horizon splits the image");
 
     const cv::Mat base = texture(cv::Size(800, 600));
