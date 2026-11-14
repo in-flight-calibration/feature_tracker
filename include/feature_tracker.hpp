@@ -66,14 +66,9 @@ public:
         _affine.min_spread = declare_parameter<double>("feature_tracker.affine.min_spread", 0.01);
     }
 
-    const std::shared_ptr<ifc_tools::ImageReceiver>& receiver() const
+    std::vector<rclcpp::Node::SharedPtr> children() const
     {
-        return _receiver;
-    }
-
-    const std::shared_ptr<ifc_tools::PerformanceMonitor>& performanceMonitor() const
-    {
-        return _performance_monitor;
+        return {_receiver, _performance_monitor};
     }
 
 private:

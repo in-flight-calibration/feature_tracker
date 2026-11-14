@@ -10,8 +10,12 @@ int main(int argc, char* argv[])
 
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
-    executor.add_node(node->receiver());
-    executor.add_node(node->performanceMonitor());
+
+    for (const rclcpp::Node::SharedPtr& child : node->children())
+    {
+        executor.add_node(child);
+    }
+
     executor.spin();
 
     rclcpp::shutdown();
