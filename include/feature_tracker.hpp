@@ -32,8 +32,8 @@ public:
         : rclcpp::Node("feature_tracker", options),
           _performance_monitor(std::make_shared<ifc_tools::PerformanceMonitor>("feature_tracker"))
     {
-        const std::string image_topic = declare_parameter<std::string>("image.topic", "/flightgear/image");
-        const std::string image_transport = declare_parameter<std::string>("image.transport", "compressed");
+        const std::string image_topic = declare_parameter<std::string>("camera.topic", "/flightgear/image");
+        const std::string image_transport = declare_parameter<std::string>("camera.transport", "compressed");
         _receiver = std::make_shared<ifc_tools::ImageReceiver>("feature_tracker_receiver", image_topic, image_transport);
         _receiver->setCallback(std::bind(&FeatureTracker::onImage, this, std::placeholders::_1, std::placeholders::_2));
 
