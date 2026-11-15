@@ -60,7 +60,7 @@ public:
             _performance_monitor->setTopic(performance_topic);
         }
 
-        _margin_px = static_cast<float>(declare_parameter<double>("feature_tracker.horizon_margin_px", 10.0));
+        _margin_px = static_cast<float>(declare_parameter<double>("feature_tracker.horizon_margin_px", 30.0));
         _affine.min_matches = declare_parameter<int>("feature_tracker.affine.min_matches", 12);
         _affine.ransac_threshold = declare_parameter<double>("feature_tracker.affine.ransac_threshold", 0.005);
         _affine.min_spread = declare_parameter<double>("feature_tracker.affine.min_spread", 0.01);
